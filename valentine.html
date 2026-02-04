@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe Check: Valentine?</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --primary: #ff4d6d;
+            --secondary: #fec5bb;
+            --bg: #fffcfc;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--bg);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .image-container {
+            position: relative;
+            width: 380px;
+            margin: 0 auto 30px;
+            transition: all 0.3s ease;
+        }
+
+        .cat-photo {
+            width: 100%;
+            object-fit: cover;
+            border-radius: 28px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+            background: #f0f0f0;
+        }
+
+        .speech-bubble {
+            position: absolute;
+            top: -45px;
+            right: -25px;
+            background: #fff;
+            border: 2px solid var(--primary);
+            padding: 12px 20px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--primary);
+            z-index: 50;
+            box-shadow: 0 10px 20px rgba(255, 77, 109, 0.15);
+        }
+
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 25px;
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: #fff transparent transparent;
+        }
+
+        .shaking {
+            animation: shake 0.4s infinite;
+            filter: grayscale(0.8) contrast(1.1);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translate(0,0); }
+            25% { transform: translate(-3px, 3px); }
+            75% { transform: translate(3px, -3px); }
+        }
+
+        h1 { color: var(--primary); margin-bottom: 40px; font-weight: 800; font-size: 2.2rem; padding: 0 20px; }
+
+        .btn-group {
+            position: relative;
+            height: 200px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 24px;
+        }
+
+        button {
+            padding: 18px 48px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+        }
+
+        #yesBtn { 
+            background: var(--primary); 
+            color: #fff; 
+            z-index: 100; 
+            box-shadow: 0 10px 20px rgba(255, 77, 109, 0.3); 
+        }
+
+        #noBtn { 
+            background: var(--secondary); 
+            color: #fff; 
+            position: relative;
+            pointer-events: none; /* Disables direct clicks entirely just in case */
+        }
+
+        #success-screen { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="game-ui">
+        
+        <div class="image-container" id="catBox">
+            <div id="bubble" class="speech-bubble">Mom, please say yes, or else we will be upset!</div>
+            <img src="initial.png" alt="Initial Photo" class="cat-photo" id="catImg">
+        </div>
+        
+        <h1 id="mainHeading">Will you, Arohi Muskaan Bose Lal Dadlani, be my Valentine?</h1>
+
+        <div class="btn-group">
+            <button id="yesBtn">Yes</button>
+            <button id="noBtn">No</button>
+        </div>
+    </div>
+
+    <div id="success-screen">
+        <h1 style="font-size: 4.5rem;">💖 YAY! 🥂</h1>
+        <img src="a0cc8e8e-503a-4612-b75a-749e41bf18a3.JPG" style="width: 320px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+        <p style="font-size: 1.4rem; color: #444;">The cats are happy now. Date night is secured!</p>
+    </div>
+
+    <script>
+        const noBtn = document.getElementById('noBtn');
+        const yesBtn = document.getElementById('yesBtn');
+        const bubble = document.getElementById('bubble');
+        const catBox = document.getElementById('catBox');
+        const catImg = document.getElementById('catImg');
+        const gameUI = document.getElementById('game-ui');
+        const successUI = document.getElementById('success-screen');
+
+        let noScale = 1;
+        let yesScale = 1;
+        const proximityThreshold = 65; // The "Force Field" radius
+
+        const handleEscape = () => {
+            // Guilt trip triggers on first movement
+            if (!catBox.classList.contains('shaking')) {
+                catImg.src = "cat.jpg";
+                bubble.innerText = "really disappointed in you mom... 😿";
+                catBox.classList.add('shaking');
+            }
+
+            noScale *= 0.8;
+            yesScale += 0.2;
+            
+            // Random chaotic jump logic
+            const radius = 150 + (Math.random() * 100); 
+            const angle = Math.random() * Math.PI * 2;
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius;
+
+            noBtn.style.position = 'absolute';
+            noBtn.style.transform = `translate(${x}px, ${y}px) scale(${noScale})`;
+            yesBtn.style.transform = `scale(${yesScale})`;
+
+            // Fade out when it's too tiny to see
+            if (noScale < 0.15) {
+                noBtn.style.opacity = "0";
+            }
+        };
+
+        // The Mouse Force Field
+        document.addEventListener('mousemove', (e) => {
+            const rect = noBtn.getBoundingClientRect();
+            const btnX = rect.left + rect.width / 2;
+            const btnY = rect.top + rect.height / 2;
+
+            const distance = Math.hypot(e.clientX - btnX, e.clientY - btnY);
+
+            if (distance < proximityThreshold && noScale >= 0.15) {
+                handleEscape();
+            }
+        });
+
+        // The Touch Force Field (for Mobile)
+        document.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            const rect = noBtn.getBoundingClientRect();
+            const btnX = rect.left + rect.width / 2;
+            const btnY = rect.top + rect.height / 2;
+
+            const distance = Math.hypot(touch.clientX - btnX, touch.clientY - btnY);
+
+            if (distance < proximityThreshold) {
+                handleEscape();
+            }
+        });
+
+        yesBtn.addEventListener('click', () => {
+            gameUI.style.display = 'none';
+            successUI.style.display = 'block';
+            document.body.style.backgroundColor = '#fff0f3';
+
+            confetti({
+                particleCount: 250,
+                spread: 100,
+                origin: { y: 0.6 },
+                colors: ['#ff4d6d', '#ffffff', '#ffb3c1', '#ff0033']
+            });
+        });
+    </script>
+</body>
+</html>
